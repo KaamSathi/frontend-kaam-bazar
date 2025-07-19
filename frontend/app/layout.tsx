@@ -8,8 +8,8 @@ import { Toaster } from "@/components/ui/toaster"
 const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
-  title: "KaamSathi - Find Local Workers & Jobs",
-  description: "Connect with local workers and find daily wage jobs in your area",
+  title: "KaamBazar - Find Local Workers & Jobs",
+  description: "Connect with local workers and find daily wage jobs across India. Post jobs, hire workers, and get hired for construction, delivery, and more.",
   generator: "v0.dev",
 }
 

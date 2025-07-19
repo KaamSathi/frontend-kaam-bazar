@@ -1,213 +1,297 @@
 "use client"
 
-import type React from "react"
-import { createContext, useContext, useState, useEffect, useCallback } from "react"
-import api from "../services/api"
+import React, { createContext, useContext, useEffect, useState } from 'react'
+import { firebaseAuthService } from '@/services/firebase-auth'
+import { toast } from '@/components/ui/use-toast'
 
-// This interface now correctly matches the backend's User model
-export interface User {
-  id: string
+interface User {
+  uid: string
+  email: string
   name: string
-  phone: string
-  role: "worker" | "employer"
-  avatar?: string
-  email?: string
-  location?: any
-  skills?: string[]
-  bio?: string
-  experience?: string
-  companyName?: string
-  companyWebsite?: string
-  companyDescription?: string
-  rating?: { average: number; count: number }
-  isVerified?: boolean
+  role: 'employer' | 'worker'
+  profile?: {
+    avatar?: string
+    skills?: string[]
+    experience?: string
+    location?: string
+    hourlyRate?: number
+  }
 }
 
 interface AuthContextType {
   user: User | null
-  token: string | null
-  isAuthenticated: boolean
   loading: boolean
-  sendOTP: (phone: string) => Promise<{ success: boolean; error?: string }>
-  verifyOTP: (phone: string, otp: string, role?: string, name?: string) => Promise<{ success: boolean; error?: string }>
-  updateUser: (updatedUserData: Partial<User>) => void
-  logout: () => void
-  refreshToken: () => Promise<void>
+  isAuthenticated: boolean
+  registerWithEmail: (email: string, password: string, userData: { name: string; role: 'employer' | 'worker' }) => Promise<{ success: boolean; error?: string }>
+  loginWithEmail: (email: string, password: string) => Promise<{ success: boolean; error?: string }>
+  registerWithPhone: (phone: string, password: string, userData: { name: string; role: 'employer' | 'worker' }) => Promise<{ success: boolean; error?: string }>
+  loginWithPhone: (phone: string, password: string) => Promise<{ success: boolean; error?: string }>
+  signOut: () => Promise<void>
+  updateUserProfile: (updates: Partial<User>) => Promise<{ success: boolean; error?: string }>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-// We will no longer need MOCK_USERS
-// const MOCK_USERS: User[] = [ ... ]
-
-export { AuthContext };
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
-  const [token, setToken] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
-  const [isHydrated, setIsHydrated] = useState(false)
 
   useEffect(() => {
-    setIsHydrated(true)
+    // Check for existing user session
+    checkAuthState()
   }, [])
 
-  // Load user and token from localStorage after hydration
-  useEffect(() => {
-    if (!isHydrated) return
-
+  const checkAuthState = async () => {
     try {
-      const savedToken = localStorage.getItem("kaamsathi-token")
-      const savedUser = localStorage.getItem("kaamsathi-user")
-      
-      if (savedToken && savedUser) {
-        setToken(savedToken)
-        setUser(JSON.parse(savedUser))
-        
-        // Verify token is still valid by fetching current user
-        api.auth.getMe()
-          .then((response) => {
-            if (response.status === 'success' && response.data?.user) {
-              setUser(response.data.user)
-              localStorage.setItem("kaamsathi-user", JSON.stringify(response.data.user))
+      const currentUser = firebaseAuthService.getCurrentUser()
+      if (currentUser) {
+        // Convert Firebase User to our User interface
+        const userProfile = await firebaseAuthService.getUserProfile(currentUser.uid)
+        if (userProfile) {
+          setUser({
+            uid: currentUser.uid,
+            email: currentUser.email || '',
+            name: userProfile.name,
+            role: userProfile.role,
+            profile: {
+              avatar: undefined
             }
           })
-          .catch((error) => {
-            console.error("Token validation failed:", error)
-            // Token is invalid, clear auth state
-            logout()
-          })
-          .finally(() => {
-            setLoading(false)
-          })
-      } else {
-        setLoading(false)
+        }
       }
     } catch (error) {
-      console.error("AuthProvider: Failed to load auth state from localStorage", error)
-      localStorage.clear()
+      console.error('Error checking auth state:', error)
+    } finally {
       setLoading(false)
     }
-  }, [isHydrated])
-
-  const login = useCallback((userData: User, userToken: string) => {
-    setUser(userData)
-    setToken(userToken)
-    if (typeof window !== 'undefined') {
-      localStorage.setItem("kaamsathi-user", JSON.stringify(userData))
-      localStorage.setItem("kaamsathi-token", userToken)
-    }
-  }, [])
-
-  const logout = useCallback(async () => {
-    try {
-      // Call backend logout (to handle token blacklisting if implemented)
-      await api.auth.logout()
-    } catch (error) {
-      console.error("Logout API call failed:", error)
-    } finally {
-      // Clear local state regardless of API call result
-      setUser(null)
-      setToken(null)
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem("kaamsathi-user")
-        localStorage.removeItem("kaamsathi-token")
-        localStorage.removeItem("kaamsathi-user-intent")
-      }
-    }
-  }, [])
-  
-  const updateUser = useCallback(
-    (updatedUserData: Partial<User>) => {
-      if (user) {
-        const newUser = { ...user, ...updatedUserData }
-        setUser(newUser)
-        if (typeof window !== 'undefined') {
-          localStorage.setItem("kaamsathi-user", JSON.stringify(newUser))
-        }
-      }
-    },
-    [user],
-  )
-
-  const sendOTP = async (phone: string): Promise<{ success: boolean; error?: string }> => {
-    try {
-      const response = await api.auth.sendOTP(phone)
-      
-      if (response.status === 'success') {
-        return { success: true }
-      } else {
-        return { success: false, error: response.message || 'Failed to send OTP' }
-      }
-    } catch (error: any) {
-      console.error("Send OTP error:", error)
-      return { success: false, error: error.message || "Cannot connect to the server." }
-    }
   }
 
-  const verifyOTP = async (
-    phone: string, 
-    otp: string, 
-    role?: string, 
-    name?: string
-  ): Promise<{ success: boolean; error?: string }> => {
+  const registerWithEmail = async (email: string, password: string, userData: { name: string; role: 'employer' | 'worker' }): Promise<{ success: boolean; error?: string }> => {
     try {
-      const userRole = role || localStorage.getItem("kaamsathi-user-intent") || "worker"
-      const response = await api.auth.verifyOTP(phone, otp, userRole, name)
+      setLoading(true)
+      const result = await firebaseAuthService.registerWithEmail(email, password, userData)
       
-      if (response.status === 'success' && response.data) {
-        const { token: userToken, user: userData } = response.data
-        if (userData && userToken) {
-          login(userData, userToken)
-          // Clear user intent after successful login
-          if (typeof window !== 'undefined') {
-            localStorage.removeItem("kaamsathi-user-intent")
+      if (result.success && result.user) {
+        setUser({
+          uid: result.user.uid,
+          email: result.user.email || '',
+          name: userData.name,
+          role: userData.role,
+          profile: {
+            avatar: undefined
           }
-          return { success: true }
-        } else {
-          return { success: false, error: "Invalid user data from server." }
-        }
+        })
+        toast({
+          title: "Account Created",
+          description: `Welcome to KaamBazar, ${userData.name}!`,
+        })
       } else {
-        return { success: false, error: response.message || 'Failed to verify OTP' }
+        toast({
+          title: "Registration Failed",
+          description: result.error || "Failed to create account",
+          variant: "destructive",
+        })
       }
-    } catch (error: any) {
-      console.error("Verify OTP error:", error)
-      return { success: false, error: error.message || "Cannot connect to the server." }
-    }
-  }
-
-  const refreshToken = async (): Promise<void> => {
-    try {
-      const response = await api.auth.refreshToken()
       
-      if (response.status === 'success' && response.data?.token) {
-        setToken(response.data.token)
-        if (typeof window !== 'undefined') {
-          localStorage.setItem("kaamsathi-token", response.data.token)
-        }
-      } else {
-        throw new Error("Failed to refresh token")
-      }
-    } catch (error) {
-      console.error("Token refresh failed:", error)
-      logout() // Force logout if refresh fails
+      return result
+    } catch (error: any) {
+      const errorMessage = error.message || "Failed to create account"
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      })
+      return { success: false, error: errorMessage }
+    } finally {
+      setLoading(false)
     }
   }
 
-  const isAuthenticated = !loading && !!user && !!token
+  const loginWithEmail = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      setLoading(true)
+      const result = await firebaseAuthService.loginWithEmail(email, password)
+      
+      if (result.success && result.user) {
+        const userProfile = await firebaseAuthService.getUserProfile(result.user.uid)
+        if (userProfile) {
+          setUser({
+            uid: result.user.uid,
+            email: result.user.email || '',
+            name: userProfile.name,
+            role: userProfile.role,
+            profile: {
+              avatar: undefined
+            }
+          })
+          toast({
+            title: "Welcome Back!",
+            description: `Welcome back, ${userProfile.name}!`,
+          })
+        }
+      } else {
+        toast({
+          title: "Login Failed",
+          description: result.error || "Invalid email or password",
+          variant: "destructive",
+        })
+      }
+      
+      return result
+    } catch (error: any) {
+      const errorMessage = error.message || "Failed to login"
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      })
+      return { success: false, error: errorMessage }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const registerWithPhone = async (phone: string, password: string, userData: { name: string; role: 'employer' | 'worker' }): Promise<{ success: boolean; error?: string }> => {
+    try {
+      setLoading(true)
+      const result = await firebaseAuthService.registerWithPhone(phone, password, userData)
+      
+      if (result.success && result.user) {
+        setUser({
+          uid: result.user.uid,
+          email: result.user.email || '',
+          name: userData.name,
+          role: userData.role,
+          profile: {
+            avatar: undefined
+          }
+        })
+        toast({
+          title: "Account Created",
+          description: `Welcome to KaamBazar, ${userData.name}!`,
+        })
+      } else {
+        toast({
+          title: "Registration Failed",
+          description: result.error || "Failed to create account",
+          variant: "destructive",
+        })
+      }
+      
+      return result
+    } catch (error: any) {
+      const errorMessage = error.message || "Failed to create account"
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      })
+      return { success: false, error: errorMessage }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const loginWithPhone = async (phone: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      setLoading(true)
+      const result = await firebaseAuthService.loginWithPhone(phone, password)
+      
+      if (result.success && result.user) {
+        const userProfile = await firebaseAuthService.getUserProfile(result.user.uid)
+        if (userProfile) {
+          setUser({
+            uid: result.user.uid,
+            email: result.user.email || '',
+            name: userProfile.name,
+            role: userProfile.role,
+            profile: {
+              avatar: undefined
+            }
+          })
+          toast({
+            title: "Welcome Back!",
+            description: `Welcome back, ${userProfile.name}!`,
+          })
+        }
+      } else {
+        toast({
+          title: "Login Failed",
+          description: result.error || "Invalid phone or password",
+          variant: "destructive",
+        })
+      }
+      
+      return result
+    } catch (error: any) {
+      const errorMessage = error.message || "Failed to login"
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      })
+      return { success: false, error: errorMessage }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const signOut = async (): Promise<void> => {
+    try {
+      await firebaseAuthService.signOut()
+      setUser(null)
+      toast({
+        title: "Signed Out",
+        description: "You have been successfully signed out.",
+      })
+    } catch (error: any) {
+      console.error('Error signing out:', error)
+      toast({
+        title: "Error",
+        description: "Failed to sign out. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const updateUserProfile = async (updates: Partial<User>): Promise<{ success: boolean; error?: string }> => {
+    if (!user) {
+      return { success: false, error: "No user logged in" }
+    }
+
+    try {
+      // For development, just update local state
+      setUser({ ...user, ...updates })
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been updated successfully.",
+      })
+      return { success: true }
+    } catch (error: any) {
+      const errorMessage = error.message || "Failed to update profile"
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      })
+      return { success: false, error: errorMessage }
+    }
+  }
+
+  const value: AuthContextType = {
+    user,
+    loading,
+    isAuthenticated: !!user,
+    registerWithEmail,
+    loginWithEmail,
+    registerWithPhone,
+    loginWithPhone,
+    signOut,
+    updateUserProfile,
+  }
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      token, 
-      isAuthenticated, 
-      loading, 
-      sendOTP, 
-      verifyOTP, 
-      updateUser, 
-      logout,
-      refreshToken
-    }}>
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   )
@@ -216,7 +300,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 export function useAuth() {
   const context = useContext(AuthContext)
   if (context === undefined) {
-    throw new Error("useAuth must be used within an AuthProvider")
+    throw new Error('useAuth must be used within an AuthProvider')
   }
   return context
 }

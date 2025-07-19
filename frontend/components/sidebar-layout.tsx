@@ -37,7 +37,7 @@ interface SidebarLayoutProps {
 }
 
 export default function SidebarLayout({ children }: SidebarLayoutProps) {
-  const { user, logout } = useAuth()
+  const { user, signOut } = useAuth()
   const pathname = usePathname()
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
@@ -71,7 +71,7 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
 
   const handleLogout = () => {
     console.log("SidebarLayout: handleLogout called")
-    logout()
+    signOut()
     router.push("/")
   }
 
@@ -94,7 +94,7 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
             <div className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 bg-blue-600 rounded-lg flex items-center justify-center flex-shrink-0">
               <span className="text-white font-bold text-xs sm:text-sm lg:text-base">K</span>
             </div>
-            <span className="font-semibold text-sm sm:text-base lg:text-lg text-gray-900 truncate">KaamSathi</span>
+                            <span className="font-semibold text-sm sm:text-base lg:text-lg text-gray-900 truncate">KaamBazar</span>
           </Link>
           <Button variant="ghost" size="sm" className="lg:hidden h-8 w-8 p-0" onClick={() => setSidebarOpen(false)}>
             <X className="h-4 w-4" />
@@ -105,9 +105,9 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
         <div className="p-3 sm:p-4 lg:p-6 border-b border-gray-200 bg-gray-50">
           <div className="flex items-center gap-2 sm:gap-3">
             <Avatar className="h-8 w-8 sm:h-10 sm:w-10 lg:h-12 lg:w-12 border-2 border-blue-100 flex-shrink-0">
-              <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
+              <AvatarImage src={user.profile?.avatar || "/placeholder.svg"} alt={user.name || "User"} />
               <AvatarFallback className="bg-blue-600 text-white text-xs sm:text-sm">
-                {user.name.charAt(0).toUpperCase()}
+                {(user.name || "U").charAt(0).toUpperCase()}
               </AvatarFallback>
             </Avatar>
             <div className="flex-1 min-w-0">
@@ -223,9 +223,9 @@ export default function SidebarLayout({ children }: SidebarLayoutProps) {
               )}
               <RealTimeNotifications />
               <Avatar className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 border border-gray-200">
-                <AvatarImage src={user.avatar || "/placeholder.svg"} alt={user.name} />
+                <AvatarImage src={user.profile?.avatar || "/placeholder.svg"} alt={user.name || "User"} />
                 <AvatarFallback className="bg-blue-600 text-white text-xs">
-                  {user.name.charAt(0).toUpperCase()}
+                  {(user.name || "U").charAt(0).toUpperCase()}
                 </AvatarFallback>
               </Avatar>
             </div>

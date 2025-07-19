@@ -26,7 +26,7 @@ export default function ModernHeader() {
               <div className="h-6 w-6 sm:h-7 sm:w-7 lg:h-8 lg:w-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-md">
                 <span className="text-white font-bold text-xs sm:text-sm lg:text-base">K</span>
               </div>
-              <span className="font-bold text-base sm:text-lg lg:text-xl text-gray-900 hidden xs:block">KaamSathi</span>
+              <span className="font-bold text-base sm:text-lg lg:text-xl text-gray-900 hidden xs:block">KaamBazar</span>
             </Link>
 
             {/* Desktop Navigation */}
@@ -121,13 +121,13 @@ export default function ModernHeader() {
                 )}
               </div>
 
-              {/* Why KaamSathi dropdown */}
+              {/* Why KaamBazar dropdown */}
               <div className="relative">
                 <button
                   onClick={() => toggleDropdown("why")}
                   className="px-2 xl:px-3 py-2 rounded-md text-sm font-medium text-gray-700 hover:bg-white/80 flex items-center transition-colors whitespace-nowrap"
                 >
-                  <span className="hidden xl:inline">Why KaamSathi</span>
+                                      <span className="hidden xl:inline">Why KaamBazar</span>
                   <span className="xl:hidden">Why</span>
                   <ChevronDown className="ml-1 h-3 w-3 xl:h-4 xl:w-4" />
                 </button>
@@ -294,7 +294,7 @@ export default function ModernHeader() {
                 onClick={() => toggleDropdown("mobile-why")}
                 className="w-full text-left px-3 py-2.5 rounded-md text-sm font-medium text-gray-700 hover:bg-white/80 flex items-center justify-between transition-colors"
               >
-                Why KaamSathi
+                Why KaamBazar
                 <ChevronDown className="ml-1 h-4 w-4" />
               </button>
               {activeDropdown === "mobile-why" && (

@@ -242,7 +242,7 @@ export default function UserIntentModal({ isOpen, onClose, onSelect }: UserInten
           {/* Footer */}
           <div className="mt-8 text-center relative z-10">
             <p className="text-sm text-gray-500 mb-2">कृपया आगे बढ़ने के लिए एक विकल्प चुनें</p>
-            <p className="text-xs text-gray-400">Please select an option to continue to KaamSathi</p>
+            <p className="text-xs text-gray-400">Please select an option to continue to KaamBazar</p>
           </div>
         </div>
       </DialogContent>

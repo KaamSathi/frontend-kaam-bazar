@@ -7,11 +7,11 @@ import { Button } from "@/components/ui/button"
 import { LogOut, User } from "lucide-react"
 
 export default function DashboardHeader() {
-  const { user, logout } = useAuth()
+  const { user, signOut } = useAuth()
   const router = useRouter()
 
   const handleLogout = () => {
-    logout()
+    signOut()
     router.push("/")
   }
 
@@ -25,7 +25,7 @@ export default function DashboardHeader() {
           <div className="h-8 w-8 bg-green-600 rounded-lg flex items-center justify-center">
             <span className="text-white font-bold text-lg">K</span>
           </div>
-          <span className="font-bold text-xl text-gray-900">KaamSathi</span>
+          <span className="font-bold text-xl text-gray-900">KaamBazar</span>
         </Link>
 
         {/* User Info */}

@@ -13,26 +13,20 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Textarea } from "@/components/ui/textarea"
 import { Phone, Loader2, Shield, Mail, MapPinIcon } from "lucide-react"
 import UserIntentModal from "@/components/user-intent-modal"
+import { AuthForms } from "@/components/auth-forms"
 import { toast } from "@/components/ui/use-toast"
 import contentConfig from "@/config/contentConfig"
 import TestimonialsCarousel from "@/components/testimonials-carousel"
 
 export default function Home() {
-  const { isAuthenticated, user, loading, sendOTP, verifyOTP } = useAuth()
+  const { isAuthenticated, user, loading } = useAuth()
   const router = useRouter()
   const [showIntentModal, setShowIntentModal] = useState(false)
   const [userIntent, setUserIntent] = useState<"hire" | "job" | null>(null)
   const [isHydrated, setIsHydrated] = useState(false)
 
   // Authentication states
-  const [phoneNumber, setPhoneNumber] = useState("")
-  const [otp, setOtp] = useState(["", "", "", "", "", ""])
-  const [isOtpSent, setIsOtpSent] = useState(false)
-  const [isVerifying, setIsVerifying] = useState(false)
-  const [isSendingOtp, setIsSendingOtp] = useState(false)
-  const [agreedToTerms, setAgreedToTerms] = useState(false)
-  const [userName, setUserName] = useState("")
-  const [showNameInput, setShowNameInput] = useState(false)
+  const [showAuthForms, setShowAuthForms] = useState(false)
 
   // Contact form states
   const [contactForm, setContactForm] = useState({
@@ -61,7 +55,7 @@ export default function Home() {
     
     if (!isAuthenticated) {
       if (typeof window !== 'undefined') {
-        const savedIntent = localStorage.getItem("kaamsathi-user-intent")
+        const savedIntent = localStorage.getItem("kaambazar-user-intent")
         if (savedIntent) {
           setUserIntent(savedIntent as "hire" | "job")
         } else {
@@ -157,7 +151,7 @@ export default function Home() {
 
   const handleIntentSelection = (intent: "hire" | "job") => {
     if (typeof window !== 'undefined') {
-      localStorage.setItem("kaamsathi-user-intent", intent)
+      localStorage.setItem("kaambazar-user-intent", intent)
     }
     setUserIntent(intent)
     setShowIntentModal(false)
@@ -167,147 +161,18 @@ export default function Home() {
     return
   }
 
-  const handleSendOTP = async () => {
-    if (!phoneNumber || phoneNumber.length !== 10) {
-      toast({
-        title: "Invalid phone number",
-        description: "Please enter a valid 10-digit phone number",
-        variant: "destructive",
-      })
-      return
-    }
-
-    setIsSendingOtp(true)
-    try {
-      const result = await sendOTP(phoneNumber)
-      if (result.success) {
-        setIsOtpSent(true)
-        toast({
-          title: "OTP Sent",
-          description: "A 6-digit verification code has been sent to your phone number.",
-        })
-      } else {
-        toast({
-          title: "Failed to send OTP",
-          description: result.error || "Please try again later",
-          variant: "destructive",
-        })
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsSendingOtp(false)
-    }
+  const handleShowAuthForms = () => {
+    setShowAuthForms(true)
   }
 
-  const handleOtpChange = (index: number, value: string) => {
-    if (value.length > 1) return
-
-    const newOtp = [...otp]
-    newOtp[index] = value
-    setOtp(newOtp)
-
-    // Auto-focus next input
-    if (value && index < 5) {
-      const nextInput = document.getElementById(`otp-${index + 1}`)
-      nextInput?.focus()
-    }
-  }
-
-  const handleOtpKeyDown = (index: number, e: React.KeyboardEvent) => {
-    if (e.key === "Backspace" && !otp[index] && index > 0) {
-      const prevInput = document.getElementById(`otp-${index - 1}`)
-      prevInput?.focus()
-    }
-  }
-
-  const handleVerifyOTP = async () => {
-    const otpString = otp.join("")
-    if (otpString.length !== 6) {
-      toast({
-        title: "Invalid OTP",
-        description: "Please enter a valid 6-digit OTP",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (!agreedToTerms) {
-      toast({
-        title: "Terms & Conditions",
-        description: "Please agree to the terms and conditions to continue",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (!userIntent) {
-      toast({
-        title: "Role Selection Required",
-        description: "Please select whether you're looking for work or hiring",
-        variant: "destructive",
-      })
-      return
-    }
-
-    // Check if name is required for new users
-    if (showNameInput && !userName.trim()) {
-      toast({
-        title: "Name Required",
-        description: "Please enter your name to complete registration",
-        variant: "destructive",
-      })
-      return
-    }
-
-    setIsVerifying(true)
-    try {
-      // Convert user intent to role
-      const role = userIntent === "job" ? "worker" : "employer"
-      
-      const result = await verifyOTP(phoneNumber, otpString, role, userName.trim() || undefined)
-      if (result.success) {
-        toast({
-          title: "Welcome to KaamSathi!",
-          description: userName ? `Account created successfully!` : `Login successful!`,
-        })
-        // Redirect will be handled by the auth context
-        router.push("/dashboard")
-      } else {
-        // Check if error indicates new user needs name
-        if (result.error?.includes("Name is required")) {
-          setShowNameInput(true)
-          toast({
-            title: "Name Required",
-            description: "Please enter your name to complete registration",
-            variant: "destructive",
-          })
-        } else {
-          toast({
-            title: "Verification Failed",
-            description: result.error || "Invalid OTP. Please try again.",
-            variant: "destructive",
-          })
-        }
-      }
-    } catch (error) {
-      toast({
-        title: "Error",
-        description: "An unexpected error occurred. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsVerifying(false)
-    }
+  const handleAuthSuccess = () => {
+    setShowAuthForms(false)
+    router.push("/dashboard")
   }
 
   const handleChangeIntent = () => {
     if (typeof window !== 'undefined') {
-      localStorage.removeItem("kaamsathi-user-intent")
+              localStorage.removeItem("kaambazar-user-intent")
     }
     setUserIntent(null)
     setShowIntentModal(true)
@@ -319,7 +184,7 @@ export default function Home() {
       <div className="min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="text-center">
           <Loader2 className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-gray-600">Loading KaamSathi...</p>
+          <p className="text-gray-600">Loading KaamBazar...</p>
         </div>
       </div>
     )
@@ -341,7 +206,7 @@ export default function Home() {
               <div className="h-6 w-6 sm:h-8 sm:w-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-md">
                 <span className="text-white font-bold text-sm sm:text-lg">K</span>
               </div>
-              <span className="font-bold text-lg sm:text-xl text-gray-900 hidden xs:block">KaamSathi</span>
+              <span className="font-bold text-lg sm:text-xl text-gray-900 hidden xs:block">KaamBazar</span>
             </Link>
 
             {/* Right side buttons - Responsive */}
@@ -392,166 +257,33 @@ export default function Home() {
                 </p>
               </div>
 
-              {/* Right side - Login Card with Glass Effect */}
+              {/* Right side - Auth Forms */}
               <div className="order-1 lg:order-2 w-full max-w-sm xs:max-w-md mx-auto lg:max-w-lg lg:ml-auto px-2 sm:px-0">
-                <div className="backdrop-blur-xl bg-white/90 border border-white/30 rounded-lg sm:rounded-xl lg:rounded-2xl p-3 xs:p-4 sm:p-6 lg:p-8 xl:p-10 shadow-2xl w-full supports-[backdrop-filter]:bg-white/80">
-                  <h2 className="text-lg xs:text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-3 sm:mb-4 lg:mb-6 xl:mb-8 text-center">
-                    {config.loginTitle}
-                  </h2>
-
-                  {!isOtpSent ? (
-                    <div className="space-y-3 sm:space-y-4 lg:space-y-6">
-                      {/* Mobile Number Input */}
-                      <div className="space-y-1 sm:space-y-2">
-                        <label htmlFor="phoneNumber" className="text-xs sm:text-sm font-medium text-gray-700">
-                          Mobile Number
-                        </label>
-                        <div className="flex">
-                          <div className="flex items-center px-2 sm:px-3 lg:px-4 bg-gray-50/80 backdrop-blur-sm border border-r-0 border-gray-300/50 rounded-l-lg">
-                            <Phone className="h-3 w-3 sm:h-4 sm:w-4 text-gray-500 mr-1 sm:mr-2" />
-                            <span className="text-xs sm:text-sm text-gray-600">+91</span>
-                          </div>
-                          <Input
-                            id="phoneNumber"
-                            type="tel"
-                            placeholder="Your Mobile Number"
-                            value={phoneNumber}
-                            onChange={(e) => setPhoneNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                            className="rounded-l-none border-l-0 focus:border-l text-xs sm:text-sm lg:text-base py-2 sm:py-3 lg:py-4 bg-white/80 backdrop-blur-sm border-gray-300/50 h-9 sm:h-10 lg:h-12"
-                            disabled={isSendingOtp}
-                            maxLength={10}
-                            aria-label="Mobile Number"
-                          />
-                        </div>
-                      </div>
-
-                      {/* Terms and Conditions */}
-                      <div className="flex items-start space-x-2">
-                        <Checkbox
-                          id="terms"
-                          checked={agreedToTerms}
-                          onCheckedChange={(checked) => setAgreedToTerms(checked as boolean)}
-                          className="mt-0.5 h-3 w-3 sm:h-4 sm:w-4"
-                        />
-                        <label htmlFor="terms" className="text-xs sm:text-sm text-gray-600 leading-relaxed">
-                          I agree to the{" "}
-                          <a href="#terms" className="text-blue-600 hover:underline">
-                            Terms of Service
-                          </a>{" "}
-                          and{" "}
-                          <a href="#privacy" className="text-blue-600 hover:underline">
-                            Privacy Policy
-                          </a>
-                        </label>
-                      </div>
-
-                      {/* Send OTP Button */}
+                {showAuthForms ? (
+                  <AuthForms onSuccess={handleAuthSuccess} />
+                ) : (
+                  <div className="backdrop-blur-xl bg-white/90 border border-white/30 rounded-lg sm:rounded-xl lg:rounded-2xl p-3 xs:p-4 sm:p-6 lg:p-8 xl:p-10 shadow-2xl w-full supports-[backdrop-filter]:bg-white/80">
+                    <h2 className="text-lg xs:text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-3 sm:mb-4 lg:mb-6 xl:mb-8 text-center">
+                      {config.loginTitle}
+                    </h2>
+                    
+                    <div className="space-y-4">
+                      <p className="text-sm text-gray-600 text-center">
+                        {userIntent === "hire" 
+                          ? "Hire skilled workers for your projects"
+                          : "Find daily wage work opportunities"
+                        }
+                      </p>
+                      
                       <Button
-                        onClick={handleSendOTP}
-                        disabled={!phoneNumber || phoneNumber.length !== 10 || !agreedToTerms || isSendingOtp}
-                        className="w-full py-2 sm:py-3 lg:py-4 text-xs sm:text-sm lg:text-base rounded-lg sm:rounded-xl bg-blue-600/90 hover:bg-blue-700 text-white shadow-md backdrop-blur-sm transition-all duration-300 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed h-9 sm:h-10 lg:h-12"
+                        onClick={handleShowAuthForms}
+                        className="w-full py-2 sm:py-3 lg:py-4 text-xs sm:text-sm lg:text-base rounded-lg sm:rounded-xl bg-blue-600/90 hover:bg-blue-700 text-white shadow-md backdrop-blur-sm transition-all duration-300 hover:shadow-lg h-9 sm:h-10 lg:h-12"
                       >
-                        {isSendingOtp ? (
-                          <div className="flex items-center gap-2">
-                            <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                            <span>Sending...</span>
-                          </div>
-                        ) : (
-                          "Send OTP"
-                        )}
+                        Get Started
                       </Button>
                     </div>
-                  ) : (
-                    <div className="space-y-3 sm:space-y-4 lg:space-y-6">
-                      {/* Shield Icon */}
-                      <div className="flex justify-center mb-3 sm:mb-4 lg:mb-6">
-                        <div className="w-10 h-10 xs:w-12 xs:h-12 sm:w-16 sm:h-16 lg:w-20 lg:h-20 bg-blue-100/80 backdrop-blur-sm rounded-2xl flex items-center justify-center">
-                          <Shield className="h-5 w-5 xs:h-6 xs:w-6 sm:h-8 sm:w-8 lg:h-10 lg:w-10 text-blue-600" />
-                        </div>
-                      </div>
-
-                      {/* Verify Your Number */}
-                      <div className="text-center space-y-1 sm:space-y-2">
-                        <h3 className="text-base xs:text-lg sm:text-xl lg:text-2xl font-bold text-gray-900">Verify Your Number</h3>
-                        <p className="text-xs sm:text-sm text-gray-600">Enter the 6-digit code sent to</p>
-                        <p className="text-blue-600 font-semibold text-xs sm:text-sm">+91 {phoneNumber}</p>
-                      </div>
-
-                      {/* Name Input for New Users */}
-                      {showNameInput && (
-                        <div className="space-y-1 sm:space-y-2">
-                          <label htmlFor="userName" className="text-xs sm:text-sm font-medium text-gray-700">
-                            Full Name *
-                          </label>
-                          <Input
-                            id="userName"
-                            type="text"
-                            placeholder="Enter your full name"
-                            value={userName}
-                            onChange={(e) => setUserName(e.target.value)}
-                            className="text-xs sm:text-sm lg:text-base py-2 sm:py-3 lg:py-4 bg-white/80 backdrop-blur-sm border-gray-300/50 h-9 sm:h-10 lg:h-12"
-                            maxLength={50}
-                            aria-label="Full Name"
-                          />
-                          <p className="text-xs text-gray-500">This will be used for your profile</p>
-                        </div>
-                      )}
-
-                      {/* OTP Input Boxes - Responsive sizing */}
-                      <div className="flex justify-center space-x-1.5 sm:space-x-2">
-                        {otp.map((digit, index) => (
-                          <Input
-                            key={index}
-                            id={`otp-${index}`}
-                            type="text"
-                            value={digit}
-                            onChange={(e) => handleOtpChange(index, e.target.value.replace(/\D/g, ""))}
-                            onKeyDown={(e) => handleOtpKeyDown(index, e)}
-                            className="w-7 h-7 xs:w-8 xs:h-8 sm:w-10 sm:h-10 lg:w-12 lg:h-12 text-center text-sm xs:text-base sm:text-lg lg:text-xl font-semibold border-2 rounded-lg bg-white/80 backdrop-blur-sm border-gray-300/50 focus:border-blue-500 focus:ring-blue-500"
-                            maxLength={1}
-                            aria-label={`OTP digit ${index + 1}`}
-                          />
-                        ))}
-                      </div>
-
-                      {/* Verify Button */}
-                      <Button
-                        onClick={handleVerifyOTP}
-                        disabled={otp.some((digit) => !digit) || isVerifying}
-                        className="w-full py-2 sm:py-3 lg:py-4 text-xs sm:text-sm lg:text-base rounded-lg sm:rounded-xl bg-blue-600/90 hover:bg-blue-700 text-white shadow-md backdrop-blur-sm transition-all duration-300 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed h-9 sm:h-10 lg:h-12"
-                      >
-                        {isVerifying ? (
-                          <div className="flex items-center gap-2">
-                            <Loader2 className="h-3 w-3 sm:h-4 sm:w-4 animate-spin" />
-                            <span>Verifying...</span>
-                          </div>
-                        ) : (
-                          "Verify & Continue"
-                        )}
-                      </Button>
-
-                      {/* Change Number Button */}
-                      <Button
-                        variant="outline"
-                        onClick={() => {
-                          setIsOtpSent(false)
-                          setOtp(["", "", "", "", "", ""])
-                        }}
-                        className="w-full py-2 sm:py-3 lg:py-4 text-xs sm:text-sm lg:text-base rounded-lg sm:rounded-xl bg-white/80 backdrop-blur-sm border-gray-300/50 hover:bg-gray-50 h-9 sm:h-10 lg:h-12"
-                      >
-                        Change Mobile Number
-                      </Button>
-
-                      {/* Demo OTP */}
-                      <div className="text-center">
-                        <span className="inline-flex items-center bg-green-100/80 text-green-800 text-xs px-2 py-1 rounded-full backdrop-blur-sm">
-                          <div className="w-1.5 h-1.5 sm:w-2 sm:h-2 bg-green-500 rounded-full mr-1 sm:mr-2"></div>
-                          Demo: Use OTP 123456
-                        </span>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -819,7 +551,7 @@ export default function Home() {
                   <div className="h-6 w-6 sm:h-8 sm:w-8 bg-blue-600 rounded-lg flex items-center justify-center">
                     <span className="text-white font-bold text-sm sm:text-lg">K</span>
                   </div>
-                  <span className="font-bold text-lg sm:text-xl">Kaamsathi</span>
+                  <span className="font-bold text-lg sm:text-xl">Kaambazar</span>
                 </div>
                 <p className="text-gray-400 text-xs sm:text-sm">
                   Connecting skilled workers with employers across India. Find work or hire talent with ease.

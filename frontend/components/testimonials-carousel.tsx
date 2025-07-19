@@ -24,7 +24,7 @@ const testimonials: Testimonial[] = [
     role: "Homeowner",
     company: "Tech Professional",
     location: "Mumbai, Maharashtra",
-    review: "Found a reliable plumber through KaamSathi. The worker was professional, completed the job on time, and the quality was excellent. Highly recommend!",
+    review: "Found a reliable plumber through KaamBazar. The worker was professional, completed the job on time, and the quality was excellent. Highly recommend!",
     avatar: "/images/avatars/priya-sharma.png",
     rating: 5,
     verified: true,
@@ -35,7 +35,7 @@ const testimonials: Testimonial[] = [
     role: "Business Owner",
     company: "Restaurant Owner",
     location: "Delhi, NCR",
-    review: "KaamSathi helped me find skilled workers for my restaurant renovation. The platform is easy to use and the workers were reliable. Great service!",
+    review: "KaamBazar helped me find skilled workers for my restaurant renovation. The platform is easy to use and the workers were reliable. Great service!",
     avatar: "/images/avatars/rajesh-kumar.png",
     rating: 5,
     verified: true,
@@ -46,7 +46,7 @@ const testimonials: Testimonial[] = [
     role: "Homeowner",
     company: "Teacher",
     location: "Bangalore, Karnataka",
-    review: "I needed help with house cleaning and found the perfect worker through KaamSathi. The process was smooth and the service was excellent.",
+    review: "I needed help with house cleaning and found the perfect worker through KaamBazar. The process was smooth and the service was excellent.",
     avatar: "/images/avatars/anita-gupta.png",
     rating: 5,
     verified: true,
@@ -57,7 +57,7 @@ const testimonials: Testimonial[] = [
     role: "Property Manager",
     company: "Real Estate",
     location: "Pune, Maharashtra",
-    review: "As a property manager, I regularly use KaamSathi to find maintenance workers. The platform is reliable and the workers are professional.",
+    review: "As a property manager, I regularly use KaamBazar to find maintenance workers. The platform is reliable and the workers are professional.",
     avatar: "/images/avatars/deepak-verma.png",
     rating: 5,
     verified: true,
@@ -68,7 +68,7 @@ const testimonials: Testimonial[] = [
     role: "Homeowner",
     company: "Healthcare Professional",
     location: "Hyderabad, Telangana",
-    review: "KaamSathi made it so easy to find a reliable electrician. The worker was punctual, professional, and did excellent work. Will use again!",
+    review: "KaamBazar made it so easy to find a reliable electrician. The worker was punctual, professional, and did excellent work. Will use again!",
     avatar: "/images/avatars/meera-joshi.png",
     rating: 5,
     verified: true,
@@ -79,7 +79,7 @@ const testimonials: Testimonial[] = [
     role: "Business Owner",
     company: "Shop Owner",
     location: "Chennai, Tamil Nadu",
-    review: "Found skilled workers for my shop renovation through KaamSathi. The platform is user-friendly and the workers delivered quality work.",
+    review: "Found skilled workers for my shop renovation through KaamBazar. The platform is user-friendly and the workers delivered quality work.",
     avatar: "/images/avatars/vikram-singh.png",
     rating: 5,
     verified: true,
@@ -137,7 +137,7 @@ export default function TestimonialsCarousel() {
             What Our Users Say
           </h2>
           <p className="text-sm sm:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto">
-            Real experiences from people who found reliable workers through KaamSathi
+            Real experiences from people who found reliable workers through KaamBazar
           </p>
         </div>
 
