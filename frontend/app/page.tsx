@@ -555,37 +555,7 @@ export default function Home() {
               </div>
             </div>
           </div>
-
-          {/* Statistics Cards - Fixed responsive layout */}
-          <div className="absolute bottom-0 left-0 right-0 z-20 transform translate-y-1/2">
-            <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 xl:px-8">
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 xl:gap-6">
-                {config.stats.map((stat, index) => (
-                  <div
-                    key={index}
-                    className="bg-white rounded-lg sm:rounded-xl p-2 xs:p-3 sm:p-4 lg:p-6 text-center shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
-                  >
-                    <div
-                      className={`w-5 h-5 xs:w-6 xs:h-6 sm:w-8 sm:h-8 lg:w-12 lg:h-12 ${stat.color} rounded-lg flex items-center justify-center mx-auto mb-1 xs:mb-2 sm:mb-3 lg:mb-4`}
-                    >
-                      <stat.icon
-                        className={`h-2.5 w-2.5 xs:h-3 xs:w-3 sm:h-4 sm:w-4 lg:h-6 lg:w-6 ${stat.iconColor}`}
-                        aria-hidden="true"
-                      />
-                    </div>
-                    <div className="text-xs xs:text-sm sm:text-lg lg:text-2xl xl:text-3xl font-bold text-gray-900 mb-0.5 sm:mb-1">
-                      {stat.number}
-                    </div>
-                    <div className="text-xs sm:text-sm lg:text-base text-gray-600 font-medium leading-tight">{stat.label}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
         </section>
-
-        {/* Spacer for overlapping cards */}
-        <div className="h-6 xs:h-8 sm:h-12 lg:h-16 xl:h-20 bg-gray-50"></div>
 
         {/* How It Works Section - Fixed responsive layout */}
         <section className="py-8 sm:py-12 lg:py-16 bg-white">
